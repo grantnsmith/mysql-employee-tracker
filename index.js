@@ -1,11 +1,12 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var consoleTable = require("console.table");
 
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
   user: "root",
-  password: "",
+  password: "Graysa21!",
   database: "employees_db"
 });
 
@@ -21,9 +22,9 @@ function startInquirer() {
        message: "What would you like to do?",
        choices: [
            "View all employees",
-           "View all employees by department",
-           "View all employees by role",
-           "View all employees by manager",
+           "View all employees in a specific department",
+           "View all employees in a specific role",
+           "View all employees under a certain manager",
            new inquirer.Separator(),
            "Add new employee",
            "Add new department",
@@ -46,15 +47,15 @@ function startInquirer() {
            viewAllEmployees();
        };
 
-       if (answer.start === "View all employees by department") {
+       if (answer.start === "View all employees in a specific department") {
             viewAllEmployeesByDept();
        };
 
-       if (answer.start === "View all employees by role") {
+       if (answer.start === "View all employees in a specific role") {
             viewAllEmployeesByRole();
        };
 
-       if (answer.start === "View all employees by manager") {
+       if (answer.start === "View all employees under a certain manager") {
             viewAllEmployeesByManager();
        };
 
@@ -97,30 +98,76 @@ function startInquirer() {
        if (answer.start === "View total of a departments salaries") {
             viewDepartmentSalaries();
        };
-
-
     })
 };
 
+// ------- BASIC VIEW QUERIES -------
+
+// All employees
 function viewAllEmployees() {
-    console.log("View all employees chosen");
+    connection.query("SELECT * FROM employee", function(err, res) {
+        if (err) throw err;
+        console.table(["--- All Employees ----"], res);
+    })
     startInquirer();
 };
 
+// Employees by department -ADD FUNCTION INTO CHOICES TO DISPLAY UP TO DATE LIST
 function viewAllEmployeesByDept() {
-    console.log("View all employees by department chosen");
-    startInquirer();
+    inquirer.prompt({
+        name: "viewDepartment",
+        type: "list",
+        message: "What department would you like to view?",
+        choices: [
+            "Sales",
+            "Accounting",
+            "Shipping"
+        ]
+    }).then(function(answer) {
+        var department = answer.viewDepartment;
+        var query = "SELECT e.first_name, e.last_name FROM employee e, department d, role r WHERE (d.id = r.department_id AND r.id = e.role_id) AND d.name =?";
+        connection.query(query, [department], function(err, res) {
+            if (err) throw err;
+            console.table(["--- All Employees in " + department + " ---"], res);
+        });
+        startInquirer();      
+    })  
 };
 
+// Employees by role - ADD FUNCTION INTO CHOICES TO SHOW UP TO DATE ROLES
 function viewAllEmployeesByRole() {
-    console.log("View all employees by role chosen");
+    inquirer.prompt({
+        name: "viewRole",
+        type: "list",
+        message: "What role would you like to view?",
+        choices: [
+            "Manager",
+            "Salesperson",
+            "Junior Salesperson",
+            "Accountant",
+            "Lead Accountant",
+            "Warehouse Manager",
+            "Warehouse Staff"
+        ]
+    }).then(function(answer) {
+        var role = answer.viewRole;
+        var query = "SELECT employee.first_name, employee.last_name, role.title FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE (role.title = ?)";
+        connection.query(query, [role], function(err, res) {
+            if (err) throw err;
+            console.table(["--- All " + role + "s ---"], res);
+    })  
     startInquirer();
-};
+});
 
+}
+
+// View by manager - BONUS
 function viewAllEmployeesByManager() {
     console.log("View all employees by manager chosen");
     startInquirer();
 };
+
+// ------- ADD NEW ITEM -------
 
 function addNewEmployee() {
     console.log("Add new employee chosen");
@@ -137,6 +184,8 @@ function addNewRole() {
     startInquirer();
 };
 
+// ------- UPDATE ITEM --------
+
 function updateEmployeeRole() {
     console.log("Update Employee Role chosen");
     startInquirer();
@@ -146,6 +195,8 @@ function updateEmployeeManager() {
     console.log("Update Employee Manager chosen");
     startInquirer();
 };
+
+// ------- DELETING ITEM -------
 
 function deleteDepartment() {
     console.log("Delete department chosen");
@@ -161,6 +212,8 @@ function deleteEmployee() {
     console.log("Delete Employee chosen");
     startInquirer();
 };
+
+// -------- VIEWING SALARIES --------
 
 function viewTotalSalaries() {
     console.log("View total salaries chosen");
