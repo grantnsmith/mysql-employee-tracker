@@ -144,7 +144,7 @@ function viewAllEmployeesByDept() {
 }
 
 
-// Employees by role
+// Employees by role - 
 function viewAllEmployeesByRole() {
     connection.query("SELECT title FROM role", function(err, res) {
         if (err) throw err;
