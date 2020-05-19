@@ -112,17 +112,25 @@ function viewAllEmployees() {
     startInquirer();
 };
 
-// Employees by department -ADD FUNCTION INTO CHOICES TO DISPLAY UP TO DATE LIST
+
+// Employees by department 
 function viewAllEmployeesByDept() {
+    connection.query("SELECT name FROM department", function(err, res) {
+    if (err) throw err;
+
     inquirer.prompt({
         name: "viewDepartment",
         type: "list",
+        choices: function() {
+            var departmentsArr = [];
+                for (i=0; i<res.length; i++) {
+                    departmentsArr.push(res[i].name)
+                }  
+                return departmentsArr;
+            },
+
         message: "What department would you like to view?",
-        choices: [
-            "Sales",
-            "Accounting",
-            "Shipping"
-        ]
+           
     }).then(function(answer) {
         var department = answer.viewDepartment;
         var query = "SELECT e.first_name, e.last_name FROM employee e, department d, role r WHERE (d.id = r.department_id AND r.id = e.role_id) AND d.name =?";
@@ -131,8 +139,10 @@ function viewAllEmployeesByDept() {
             console.table(["--- All Employees in " + department + " ---"], res);
         });
         startInquirer();      
-    })  
-};
+    });  
+  });
+}
+
 
 // Employees by role - ADD FUNCTION INTO CHOICES TO SHOW UP TO DATE ROLES
 function viewAllEmployeesByRole() {
