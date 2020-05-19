@@ -144,31 +144,34 @@ function viewAllEmployeesByDept() {
 }
 
 
-// Employees by role - ADD FUNCTION INTO CHOICES TO SHOW UP TO DATE ROLES
+// Employees by role
 function viewAllEmployeesByRole() {
+    connection.query("SELECT title FROM role", function(err, res) {
+        if (err) throw err;
+
     inquirer.prompt({
         name: "viewRole",
         type: "list",
+        choices: function() {
+            var rolesArr = [];
+                for (i=0; i<res.length; i++) {
+                    rolesArr.push(res[i].title)
+                }  
+                return rolesArr;
+            },
+
         message: "What role would you like to view?",
-        choices: [
-            "Manager",
-            "Salesperson",
-            "Junior Salesperson",
-            "Accountant",
-            "Lead Accountant",
-            "Warehouse Manager",
-            "Warehouse Staff"
-        ]
+            
     }).then(function(answer) {
         var role = answer.viewRole;
         var query = "SELECT employee.first_name, employee.last_name, role.title FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE (role.title = ?)";
         connection.query(query, [role], function(err, res) {
             if (err) throw err;
             console.table(["--- All " + role + "s ---"], res);
-    })  
-    startInquirer();
-});
-
+        })  
+        startInquirer();
+    });
+  });
 }
 
 // View by manager - BONUS
