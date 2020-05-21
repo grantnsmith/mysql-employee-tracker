@@ -274,7 +274,6 @@ function addNewEmployee() {
         connection.query(query, [answer.chooseRole, manFirstName, manLastName], function(err, res) {
             if (err) throw err;
         
-
         connection.query(
             "INSERT INTO employee SET ?",
             {
@@ -316,8 +315,60 @@ function addNewDepartment() {
 
 // Add new Role
 function addNewRole() {
-    console.log("Add new role chosen");
-    startInquirer();
+    connection.query("SELECT name FROM department", function(err, res) {
+        if (err) throw err;
+    
+        inquirer.prompt([
+            {
+            name: "department",
+            type: "list",
+            choices: function() {
+                var departmentsArr = [];
+                    for (i=0; i<res.length; i++) {
+                        departmentsArr.push(res[i].name)
+                    }  
+                    return departmentsArr;
+                },
+            message: "What department will this new role be in?",             
+            },
+            {
+                name: "addRole",
+                type: "input",
+                message: "What is the role called?",     
+            },
+            {
+                name: "salary",
+                type: "input",
+                message: "How much will they get paid?",     
+            },
+
+    ]).then(function(answer) {
+            var department = answer.department;
+            var query = "SELECT id FROM department WHERE name = ?";
+            var role = answer.addRole;
+            var salary = answer.salary;
+
+            connection.query(query, [department], function(err, res) {
+                if (err) throw err;
+
+            connection.query(
+                "INSERT INTO role SET ?",
+                {
+                    title: role,
+                    salary: salary,
+                    department_id: res[0].id
+                },
+                function(err) {
+                    if (err) throw err;
+                    console.log( "------- New Role of " + role + " Added in " + answer.department + " -------");
+                    startInquirer();
+                }
+            )
+
+            });     
+        });  
+        
+      });
 };
 
 // ------- UPDATE ITEM --------
