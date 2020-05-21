@@ -38,7 +38,7 @@ const checkManagerValidation = value => {
 
         console.log(res[0].result);
         
-        if (res[0].result == 1 ) { // THIS LINE NOT WORKING ------------------------**
+        if (res[0].result == 1 ) {
             return true;
         } else {
             return "That is not a valid Manager choice."
@@ -296,9 +296,23 @@ function addNewEmployee() {
 
 // Add new Department
 function addNewDepartment() {
-    console.log("Add new department chosen");
-    startInquirer();
-};
+    inquirer.prompt({
+        name: "addDepartment",
+        type: "input",
+        message: "What department would you like to add?",
+            
+    }).then(function(answer) {
+        connection.query("INSERT INTO department SET ?",
+        {
+            name: answer.addDepartment
+        } , 
+        function(err) {
+            if (err) throw err;
+            console.table(["-------- Added New Department: " + answer.addDepartment + " --------"]);
+            startInquirer();
+        })  
+    });
+} 
 
 // Add new Role
 function addNewRole() {
