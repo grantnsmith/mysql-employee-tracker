@@ -38,7 +38,7 @@ const checkManagerValidation = value => {
 
         console.log(res[0].result);
         
-        if (res[0].result == 1 ) {
+        if (res[0].result == 1 ) { // THIS LINE NOT WORKING ------------------------**
             return true;
         } else {
             return "That is not a valid Manager choice."
