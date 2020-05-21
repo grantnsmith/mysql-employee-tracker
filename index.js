@@ -7,13 +7,43 @@ var connection = mysql.createConnection({
   port: 3306,
   user: "root",
   password: "",
-  database: "employees_db"
+  database: "employees_db",
+  multipleStatements: true
 });
 
 connection.connect(function(err) {
   if (err) throw err;
   startInquirer();
 });
+
+// INQUIRER RESPONSE VALIDATION
+
+// Requiring response for inquirer prompts
+const emptyResponseValidation = value => {
+    if (/\w/.test(value)) {
+        return true;
+    } else {
+    return "Input required";
+    }
+};
+
+// Checking if manager choice is valid
+const checkManagerValidation = value => {
+    var nameArr = value.split(" ");
+    firstName = nameArr[0];
+    lastName = nameArr[1];
+    connection.query("SELECT EXISTS (SELECT first_name, last_name FROM employee WHERE first_name = ? AND last_name = ?) AS result;", [firstName, lastName], function(err, res) {
+        if (err) throw err; 
+
+        console.log(res[0].result);
+        
+        if (res[0].result == 1 ) {
+            return true;
+        } else {
+            return "That is not a valid Manager choice."
+        } 
+    })
+};
 
 function startInquirer() {
     inquirer.prompt({
@@ -107,9 +137,9 @@ function startInquirer() {
 function viewAllEmployees() {
     connection.query("SELECT * FROM employee", function(err, res) {
         if (err) throw err;
-        console.table(["--- All Employees ----"], res);
+        console.table(["-------- All Employees ---------"], res);
+        startInquirer();
     })
-    startInquirer();
 };
 
 
@@ -136,10 +166,11 @@ function viewAllEmployeesByDept() {
         var query = "SELECT e.first_name, e.last_name FROM employee e, department d, role r WHERE (d.id = r.department_id AND r.id = e.role_id) AND d.name =?";
         connection.query(query, [department], function(err, res) {
             if (err) throw err;
-            console.table(["--- All Employees in " + department + " ---"], res);
-        });
-        startInquirer();      
+            console.table(["-------- All Employees in " + department + " --------"], res);
+            startInquirer(); 
+        });     
     });  
+    
   });
 }
 
@@ -167,9 +198,9 @@ function viewAllEmployeesByRole() {
         var query = "SELECT employee.first_name, employee.last_name, role.title FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE (role.title = ?)";
         connection.query(query, [role], function(err, res) {
             if (err) throw err;
-            console.table(["--- All " + role + "s ---"], res);
+            console.table(["-------- All " + role + " --------"], res);
+            startInquirer();
         })  
-        startInquirer();
     });
   });
 }
@@ -180,18 +211,95 @@ function viewAllEmployeesByManager() {
     startInquirer();
 };
 
-// ------- ADD NEW ITEM -------
+// ------- ADD NEW ITEMS -------
 
+// Add new employee
 function addNewEmployee() {
-    console.log("Add new employee chosen");
-    startInquirer();
-};
+    connection.query("SELECT department.name, role.title FROM department INNER JOIN role ON (department.id = role.department_id);", function(err, res) {
+    if (err) throw err;
+        
+    inquirer.prompt([
+        {
+            name: "firstName",
+            type:"input",
+            message: "What is the new employees first name?",
+            validate: emptyResponseValidation
+        },
+        {
+            name: "lastName",
+            type:"input",
+            message: "What is the new employees last name?",
+            validate: emptyResponseValidation
+        },
+        {
+            name: "chooseDepartment",
+            type: "list",
+            choices: function() {
+                var departmentsArr = [];
+                for (i=0; i<res.length; i++) {
+                departmentsArr.indexOf(res[i].name) === -1 ? departmentsArr.push(res[i].name) : console.log();
+                }  
+                return departmentsArr;
+                },
+            message: "What department is the new employee joining?",         
+        },
+        {
+            name: "chooseRole",
+            type: "list",
+            choices: function() {
+                var rolesArr = [];
+                for (i=0; i<res.length; i++) {
+                rolesArr.push(res[i].title)
+                }  
+                  return rolesArr;
+                },          
+            message: "What role is the new employee?"                 
+        },
+        {
+            name: "manager",
+            type:"input",
+            message: "Who is the new employees Manager?",
+            // validate: checkManagerValidation ---------------------- NOT WORKING
+        },
 
+    ]).then(function(answer) {
+        var nameArr = answer.manager.split(" ");
+        var manFirstName = nameArr[0];
+        var manLastName = nameArr[1];
+        var query = "SELECT id FROM role WHERE title = ?;SELECT id FROM employee WHERE first_name = ? AND last_name = ?"
+        var firstName = answer.firstName;
+        var lastName = answer.lastName;
+        
+        connection.query(query, [answer.chooseRole, manFirstName, manLastName], function(err, res) {
+            if (err) throw err;
+        
+
+        connection.query(
+            "INSERT INTO employee SET ?",
+            {
+                first_name: firstName,
+                last_name: lastName,
+                role_id: res[0][0].id,
+                manager_id: res[1][0].id
+            },
+                function(err) {
+                    if (err) throw err;
+                    console.log("------- New Employee " + firstName + " " + lastName + " Added! -------");
+                    startInquirer();
+                } 
+            )
+        })
+    });
+  })
+}
+
+// Add new Department
 function addNewDepartment() {
     console.log("Add new department chosen");
     startInquirer();
 };
 
+// Add new Role
 function addNewRole() {
     console.log("Add new role chosen");
     startInquirer();
