@@ -143,7 +143,6 @@ function viewAllEmployees() {
     })
 };
 
-
 // Employees by department 
 function viewAllEmployeesByDept() {
     connection.query("SELECT name FROM department", function(err, res) {
@@ -174,7 +173,6 @@ function viewAllEmployeesByDept() {
     
   });
 }
-
 
 // Employees by role - 
 function viewAllEmployeesByRole() {
@@ -480,12 +478,42 @@ function deleteEmployee() {
 
 // -------- VIEWING SALARIES --------
 
+// View total salaries of all employees
 function viewTotalSalaries() {
-    console.log("View total salaries chosen");
-    startInquirer();
+    connection.query("SELECT SUM(role.salary) AS Total_Employee_Salaries FROM employee INNER JOIN role ON (employee.role_id = role.id)", function(err, res) {
+        if (err) throw err;
+        console.table(["-------- Total of All Employee Salaries ---------"], res);
+        startInquirer();
+    })
 };
 
+// View total salaries of a specific department
 function viewDepartmentSalaries() {
-    console.log("View department salaries chosen");
-    startInquirer();
+    connection.query("SELECT name FROM department", function(err, res) {
+        if (err) throw err;
+    
+        inquirer.prompt({
+            name: "viewDepartment",
+            type: "list",
+            choices: function() {
+                var departmentsArr = [];
+                    for (i=0; i<res.length; i++) {
+                        departmentsArr.push(res[i].name)
+                    }  
+                    return departmentsArr;
+                },
+    
+            message: "What department salary total would you like to view?",
+               
+        }).then(function(answer) {
+            var department = answer.viewDepartment;
+            var query = "SELECT SUM(r.salary) AS Total_Salaries FROM employee e, department d, role r WHERE (d.id = r.department_id AND r.id = e.role_id) AND d.name = ?"
+            connection.query(query, [department], function(err, res) {
+                if (err) throw err;
+                console.table(["-------- Total Salaries in the " + department + " Department --------"], res);
+                startInquirer(); 
+            });     
+        });  
+        
+      });
 };
