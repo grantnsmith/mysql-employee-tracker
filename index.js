@@ -374,9 +374,39 @@ function addNewRole() {
 // ------- UPDATE ITEM --------
 
 function updateEmployeeRole() {
-    console.log("Update Employee Role chosen");
-    startInquirer();
-};
+    connection.query("SELECT employee.id AS Employee_ID, employee.first_name, employee.last_name, role.title, role.id AS Role_ID FROM employee INNER JOIN role ON (employee.role_id = role.id)", function(err, res) {
+        if (err) throw err;
+        console.table(["-------- All Employees by Current Role and ID ---------"], res);
+    
+        inquirer.prompt([
+            {
+                name: "chooseEmployeeID",
+                type: "input",
+                message: "Using the table above, please enter the EMPLOYEE ID of the employee who's role you would like to update.",     
+            },
+            {
+                name: "chooseRoleID",
+                type: "input",
+                message: "Using the table above, please enter the ROLE ID of the new role you want the employee to have.",      
+            } 
+    ]).then(function(answer) {
+        var employeeID = answer.chooseEmployeeID;
+        var roleID = answer.chooseRoleID;
+        connection.query("UPDATE employee SET ? WHERE ?", [
+            {
+                role_id: roleID
+            },
+            {
+                id: employeeID
+            }
+        ], function(err, res) {
+            if (err) throw err;
+            console.log("---------- Employee Role Updated -----------");
+            startInquirer();      
+      })    
+    })
+  });
+}
 
 function updateEmployeeManager() {
     console.log("Update Employee Manager chosen");
