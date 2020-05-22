@@ -208,8 +208,25 @@ function viewAllEmployeesByRole() {
 
 // View by manager - BONUS
 function viewAllEmployeesByManager() {
-    console.log("View all employees by manager chosen");
-    startInquirer();
+    connection.query("SELECT DISTINCT e1.id, e1.first_name, e1.last_name FROM employee e1, employee e2 WHERE e1.id = e2.manager_id;", function(err, res) {
+        if (err) throw err;
+        console.table(["---------- All Managers ----------"], res);
+        
+        inquirer.prompt({
+        
+        name: "chooseManager",
+        type: "input",
+        message: "Please input the ID of the manager whose employees you would like to view.",         
+    
+}).then(function(answer) {
+    var managerID = answer.chooseManager;
+    connection.query("SELECT * FROM employee WHERE manager_id = ?", [managerID], function(err, res) {
+        if (err) throw err;
+        console.table(["-------- All Employees under Selected Manager"], res);
+        startInquirer();
+      })
+    }) 
+  })
 };
 
 // ------- ADD NEW ITEMS -------
