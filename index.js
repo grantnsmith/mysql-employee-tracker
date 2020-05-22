@@ -28,24 +28,6 @@ const emptyResponseValidation = value => {
     }
 };
 
-// Checking if manager choice is valid ------------------------ NOT WORKING YET
-const checkManagerValidation = value => {
-    var nameArr = value.split(" ");
-    firstName = nameArr[0];
-    lastName = nameArr[1];
-    connection.query("SELECT EXISTS (SELECT first_name, last_name FROM employee WHERE first_name = ? AND last_name = ?) AS result;", [firstName, lastName], function(err, res) {
-        if (err) throw err; 
-
-        console.log(res[0].result);
-        
-        if (res[0].result == 1) {
-            return true;
-        } else {
-            return "That is not a valid Manager choice."
-        } 
-    })
-};
-
 function startInquirer() {
     inquirer.prompt({
        name: "start",
@@ -139,7 +121,7 @@ function startInquirer() {
 
 // ------- BASIC VIEW QUERIES -------
 
-// All employees
+// View all Employees
 function viewAllEmployees() {
     connection.query("SELECT * FROM employee", function(err, res) {
         if (err) throw err;
@@ -148,7 +130,7 @@ function viewAllEmployees() {
     })
 };
 
-// Employees by department 
+// View Employees by Department 
 function viewAllEmployeesByDept() {
     connection.query("SELECT name FROM department", function(err, res) {
     if (err) throw err;
@@ -179,7 +161,7 @@ function viewAllEmployeesByDept() {
   });
 }
 
-// Employees by role - 
+// view Employees by Role - 
 function viewAllEmployeesByRole() {
     connection.query("SELECT title FROM role", function(err, res) {
         if (err) throw err;
@@ -209,7 +191,7 @@ function viewAllEmployeesByRole() {
   });
 }
 
-// View by manager
+// View Employees by Manager
 function viewAllEmployeesByManager() {
     connection.query("SELECT DISTINCT e1.id, e1.first_name, e1.last_name FROM employee e1, employee e2 WHERE e1.id = e2.manager_id;", function(err, res) {
         if (err) throw err;
@@ -219,7 +201,8 @@ function viewAllEmployeesByManager() {
         
         name: "chooseManager",
         type: "input",
-        message: "Please input the ID of the manager whose employees you would like to view.",         
+        message: "Please input the ID of the manager whose employees you would like to view.",
+        validate: emptyResponseValidation,         
     
 }).then(function(answer) {
     var managerID = answer.chooseManager;
@@ -280,7 +263,6 @@ function addNewEmployee() {
             name: "manager",
             type:"input",
             message: "Who is the new employees Manager?",
-            // validate: checkManagerValidation -------------------- NOT WORKING YET
         },
 
     ]).then(function(answer) {
@@ -319,6 +301,7 @@ function addNewDepartment() {
         name: "addDepartment",
         type: "input",
         message: "What department would you like to add?",
+        validate: emptyResponseValidation,
             
     }).then(function(answer) {
         connection.query("INSERT INTO department SET ?",
@@ -329,8 +312,8 @@ function addNewDepartment() {
             if (err) throw err;
             console.table(["-------- Added New Department: " + answer.addDepartment + " --------"]);
             startInquirer();
-        })  
-    });
+      })  
+  });
 } 
 
 // Add new Role
@@ -348,20 +331,21 @@ function addNewRole() {
                         departmentsArr.push(res[i].name)
                     }  
                     return departmentsArr;
-                },
+                    },
             message: "What department will this new role be in?",             
             },
             {
                 name: "addRole",
                 type: "input",
-                message: "What is the role called?",     
+                message: "What is the role called?",  
+                validate: emptyResponseValidation,   
             },
             {
                 name: "salary",
                 type: "input",
-                message: "How much will they get paid?",     
+                message: "How much will they get paid?",
+                validate: emptyResponseValidation,     
             },
-
     ]).then(function(answer) {
             var department = answer.department;
             var query = "SELECT id FROM department WHERE name = ?";
@@ -382,17 +366,16 @@ function addNewRole() {
                     if (err) throw err;
                     console.log( "------- New Role of " + role + " Added in " + answer.department + " -------");
                     startInquirer();
-                }
-            )
-
-            });     
-        });  
-        
-      });
+             }
+           )
+        });     
+     });  
+  });
 };
 
 // ------- UPDATE ITEMS --------
 
+// Update Employee Role
 function updateEmployeeRole() {
     connection.query("SELECT employee.id AS Employee_ID, employee.first_name, employee.last_name, role.title, role.id AS Role_ID FROM employee INNER JOIN role ON (employee.role_id = role.id)", function(err, res) {
         if (err) throw err;
@@ -402,12 +385,14 @@ function updateEmployeeRole() {
             {
                 name: "chooseEmployeeID",
                 type: "input",
-                message: "Using the table above, please enter the EMPLOYEE ID of the employee who's role you would like to update.",     
+                message: "Using the table above, please enter the EMPLOYEE ID of the employee who's role you would like to update.",
+                validate: emptyResponseValidation,     
             },
             {
                 name: "chooseRoleID",
                 type: "input",
-                message: "Using the table above, please enter the ROLE ID of the new role you want the employee to have.",      
+                message: "Using the table above, please enter the ROLE ID of the new role you want the employee to have.", 
+                validate: emptyResponseValidation,     
             } 
     ]).then(function(answer) {
         var employeeID = answer.chooseEmployeeID;
@@ -422,13 +407,13 @@ function updateEmployeeRole() {
         ], function(err, res) {
             if (err) throw err;
             console.log("---------- Employee Role Updated -----------")
-            startInquirer();
-            
+            startInquirer();  
       })    
     })
   });
 }
 
+// Update Employee Manager
 function updateEmployeeManager() {
     connection.query("SELECT employee.id AS Employee_ID, employee.first_name, employee.last_name, manager_id AS Current_Manager_ID FROM employee", function(err, res) {
         if (err) throw err;
@@ -438,24 +423,29 @@ function updateEmployeeManager() {
             {
                 name: "chooseEmployeeID",
                 type: "input",
-                message: "Using the table above, please enter the EMPLOYEE ID of the employee who's manager you would like to update.",     
+                message: "Using the table above, please enter the EMPLOYEE ID of the employee who's manager you would like to update.",
+                validate: emptyResponseValidation,     
             },
             {
                 name: "chooseManagerID",
                 type: "input",
-                message: "Using the table above, please enter the EMPLOYEE ID of the new manager you want the employee to have.",      
+                message: "Using the table above, please enter the EMPLOYEE ID of the new manager you want the employee to have.",
+                validate: emptyResponseValidation,      
             } 
     ]).then(function(answer) {
         var employeeID = answer.chooseEmployeeID;
         var managerID = answer.chooseManagerID;
-        connection.query("UPDATE employee SET ? WHERE ?", [
+        
+        connection.query("UPDATE employee SET ? WHERE ?", 
+        [
             {
                 manager_id: managerID
             },
             {
                 id: employeeID
             }
-        ], function(err, res) {
+        ], 
+        function(err, res) {
             if (err) throw err;
             console.log("---------- Employee Manager Updated -----------")
             startInquirer(); 
@@ -464,7 +454,7 @@ function updateEmployeeManager() {
   });
 };
 
-// ------- DELETING ITEM -------
+// ------- DELETING ITEMS -------
 
 // Deleting Department
 function deleteDepartment() {
@@ -480,8 +470,7 @@ function deleteDepartment() {
                         departmentsArr.push(res[i].name)
                     }  
                     return departmentsArr;
-                },
-    
+                    },
             message: "What department would you like to delete?",
                
         }).then(function(answer) {
@@ -509,18 +498,18 @@ function deleteRole() {
                     rolesArr.push(res[i].title)
                 }  
                 return rolesArr;
-            },
-
+                },
         message: "What role would you like to delete?",
             
     }).then(function(answer) {
         var role = answer.deleteRole;
         var query = "DELETE FROM role WHERE title = ?";
+        
         connection.query(query, [role], function(err, res) {
             if (err) throw err;
             console.table(["-------- Role Deleted --------"]);
             startInquirer();
-        })  
+      })  
     });
   });
 };
@@ -534,7 +523,8 @@ function deleteEmployee() {
 
                 name: "chooseEmployeeID",
                 type: "input",
-                message: "Using the table above, please enter the EMPLOYEE ID of the employee who you would like to delete.",     
+                message: "Using the table above, please enter the EMPLOYEE ID of the employee who you would like to delete.",
+                validate: emptyResponseValidation,     
             
         }).then(function(answer) {
         var employeeID = answer.chooseEmployeeID;
@@ -543,7 +533,7 @@ function deleteEmployee() {
             if (err) throw err;
             console.table(["-------- Employee Deleted --------"]);
             startInquirer();
-        })  
+      })  
     })
   })
 };
@@ -556,7 +546,7 @@ function viewTotalSalaries() {
         if (err) throw err;
         console.table(["-------- Total of All Employee Salaries ---------"], res);
         startInquirer();
-    })
+  })
 };
 
 // View total salaries of a specific department
@@ -573,8 +563,7 @@ function viewDepartmentSalaries() {
                         departmentsArr.push(res[i].name)
                     }  
                     return departmentsArr;
-                },
-    
+                    },
             message: "What department salary total would you like to view?",
                
         }).then(function(answer) {
@@ -584,10 +573,9 @@ function viewDepartmentSalaries() {
                 if (err) throw err;
                 console.table(["-------- Total Salaries in the " + department + " Department --------"], res);
                 startInquirer(); 
-            });     
-        });  
-        
-      });
+        });     
+     });   
+  });
 };
 
 // --------- EXIT PROGRAM ----------
