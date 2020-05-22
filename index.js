@@ -461,9 +461,34 @@ function updateEmployeeManager() {
 
 // ------- DELETING ITEM -------
 
+// Deleting Department
 function deleteDepartment() {
-    console.log("Delete department chosen");
-    startInquirer();
+    connection.query("SELECT name FROM department", function(err, res) {
+        if (err) throw err;
+    
+        inquirer.prompt({
+            name: "deleteDepartment",
+            type: "list",
+            choices: function() {
+                var departmentsArr = [];
+                    for (i=0; i<res.length; i++) {
+                        departmentsArr.push(res[i].name)
+                    }  
+                    return departmentsArr;
+                },
+    
+            message: "What department would you like to delete?",
+               
+        }).then(function(answer) {
+            var department = answer.deleteDepartment;
+            var query = "DELETE FROM department WHERE name = ?"
+            connection.query(query, [department], function(err, res) {
+                if (err) throw err;
+                console.table(["-------- Department has been deleted --------"]);
+                startInquirer(); 
+        });     
+     });     
+  });
 };
 
 function deleteRole() {
