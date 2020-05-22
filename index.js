@@ -401,8 +401,9 @@ function updateEmployeeRole() {
             }
         ], function(err, res) {
             if (err) throw err;
-            console.log("---------- Employee Role Updated -----------");
-            startInquirer();      
+            console.log("---------- Employee Role Updated -----------")
+            startInquirer();
+            
       })    
     })
   });
