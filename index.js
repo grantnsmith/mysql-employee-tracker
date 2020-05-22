@@ -206,7 +206,7 @@ function viewAllEmployeesByRole() {
   });
 }
 
-// View by manager - BONUS
+// View by manager
 function viewAllEmployeesByManager() {
     connection.query("SELECT DISTINCT e1.id, e1.first_name, e1.last_name FROM employee e1, employee e2 WHERE e1.id = e2.manager_id;", function(err, res) {
         if (err) throw err;
@@ -388,7 +388,7 @@ function addNewRole() {
       });
 };
 
-// ------- UPDATE ITEM --------
+// ------- UPDATE ITEMS --------
 
 function updateEmployeeRole() {
     connection.query("SELECT employee.id AS Employee_ID, employee.first_name, employee.last_name, role.title, role.id AS Role_ID FROM employee INNER JOIN role ON (employee.role_id = role.id)", function(err, res) {
@@ -427,8 +427,38 @@ function updateEmployeeRole() {
 }
 
 function updateEmployeeManager() {
-    console.log("Update Employee Manager chosen");
-    startInquirer();
+    connection.query("SELECT employee.id AS Employee_ID, employee.first_name, employee.last_name, manager_id AS Current_Manager_ID FROM employee", function(err, res) {
+        if (err) throw err;
+        console.table(["-------- All Employees ---------"], res);
+    
+        inquirer.prompt([
+            {
+                name: "chooseEmployeeID",
+                type: "input",
+                message: "Using the table above, please enter the EMPLOYEE ID of the employee who's manager you would like to update.",     
+            },
+            {
+                name: "chooseManagerID",
+                type: "input",
+                message: "Using the table above, please enter the EMPLOYEE ID of the new manager you want the employee to have.",      
+            } 
+    ]).then(function(answer) {
+        var employeeID = answer.chooseEmployeeID;
+        var managerID = answer.chooseManagerID;
+        connection.query("UPDATE employee SET ? WHERE ?", [
+            {
+                manager_id: managerID
+            },
+            {
+                id: employeeID
+            }
+        ], function(err, res) {
+            if (err) throw err;
+            console.log("---------- Employee Manager Updated -----------")
+            startInquirer(); 
+      })    
+    })
+  });
 };
 
 // ------- DELETING ITEM -------
