@@ -71,6 +71,7 @@ function startInquirer() {
            "View total of all employee salaries",
            "View total of a departments salaries",
            new inquirer.Separator(),
+           "EXIT PROGRAM"
        ]
     })
     .then(function(answer) {
@@ -128,6 +129,10 @@ function startInquirer() {
 
        if (answer.start === "View total of a departments salaries") {
             viewDepartmentSalaries();
+       };
+       
+       if (answer.start === "EXIT PROGRAM") {
+            exitProgram();
        };
     })
 };
@@ -584,3 +589,9 @@ function viewDepartmentSalaries() {
         
       });
 };
+
+// --------- EXIT PROGRAM ----------
+function exitProgram() {
+    console.log("////---------- PROGRAM CLOSED - GOODBYE! ----------////")
+    connection.end();
+}
