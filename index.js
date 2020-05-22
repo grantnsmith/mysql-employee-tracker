@@ -28,7 +28,7 @@ const emptyResponseValidation = value => {
     }
 };
 
-// Checking if manager choice is valid
+// Checking if manager choice is valid ------------------------ NOT WORKING YET
 const checkManagerValidation = value => {
     var nameArr = value.split(" ");
     firstName = nameArr[0];
@@ -38,7 +38,7 @@ const checkManagerValidation = value => {
 
         console.log(res[0].result);
         
-        if (res[0].result == 1 ) {
+        if (res[0].result == 1) {
             return true;
         } else {
             return "That is not a valid Manager choice."
@@ -260,7 +260,7 @@ function addNewEmployee() {
             name: "manager",
             type:"input",
             message: "Who is the new employees Manager?",
-            // validate: checkManagerValidation ---------------------- NOT WORKING
+            // validate: checkManagerValidation -------------------- NOT WORKING YET
         },
 
     ]).then(function(answer) {
