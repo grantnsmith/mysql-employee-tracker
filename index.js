@@ -492,16 +492,58 @@ function deleteDepartment() {
 };
 
 function deleteRole() {
-    console.log("Delete role chosen");
-    startInquirer();
+    connection.query("SELECT title FROM role", function(err, res) {
+        if (err) throw err;
+
+    inquirer.prompt({
+        name: "deleteRole",
+        type: "list",
+        choices: function() {
+            var rolesArr = [];
+                for (i=0; i<res.length; i++) {
+                    rolesArr.push(res[i].title)
+                }  
+                return rolesArr;
+            },
+
+        message: "What role would you like to delete?",
+            
+    }).then(function(answer) {
+        var role = answer.deleteRole;
+        var query = "DELETE FROM role WHERE title = ?";
+        connection.query(query, [role], function(err, res) {
+            if (err) throw err;
+            console.table(["-------- Role Deleted --------"]);
+            startInquirer();
+        })  
+    });
+  });
 };
 
 function deleteEmployee() {
-    console.log("Delete Employee chosen");
-    startInquirer();
+    connection.query("SELECT id AS Employee_ID, first_name, last_name FROM employee", function(err, res) {
+        if (err) throw err;
+        console.table(["-------- All Employees ---------"], res);
+        
+        inquirer.prompt({
+
+                name: "chooseEmployeeID",
+                type: "input",
+                message: "Using the table above, please enter the EMPLOYEE ID of the employee who you would like to delete.",     
+            
+        }).then(function(answer) {
+        var employeeID = answer.chooseEmployeeID;
+        var query = "DELETE FROM employee WHERE id = ?";
+        connection.query(query, [employeeID], function(err, res) {
+            if (err) throw err;
+            console.table(["-------- Employee Deleted --------"]);
+            startInquirer();
+        })  
+    })
+  })
 };
 
-// -------- VIEWING SALARIES --------
+// -------- VIEWING SALARIES ----------
 
 // View total salaries of all employees
 function viewTotalSalaries() {
